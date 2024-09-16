@@ -1,0 +1,110 @@
+.card {
+    width: 15vw;
+    height: 35vh;
+    margin: 3vmin;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-color: rgba(0, 0, 0, 0.143);
+  }
+
+  .stats-holder-div {
+    width: 95vw;
+    height: 8vh;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+  }
+  
+  .card-name-div {
+    width: 80%; 
+    height: 15%; 
+    display: flex;
+    justify-content: center; 
+    align-items: center;
+    flex-shrink: 0;
+    padding: 0 1vw; /* Adds padding on both sides */
+    background-color: #cad15fa2; /* Sets the background color */
+    border-radius: 5px; /* Rounds the corners slightly */
+    overflow: hidden;
+    box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.2); /* Adds a shadow */
+    border: 1vmin double rgb(81, 6, 6);
+  }
+  
+  .card-name-text {
+    font-size: clamp(0.5rem, 1.6vmin, 2rem)
+    color: white; /* Set text color */
+    margin: 0; /* Remove default margin */
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    width: 100%;
+    text-align: center;
+  }
+
+  .card-avatar-img {
+    height: auto;
+    width: 6vw;
+    margin: 1vh auto;
+  }
+  
+  .card-text-div {
+    padding: 10px; /* Add some padding to the text div */
+  }
+
+
+.handContainer {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    width: 95vw;
+    height: 50vh;
+    background-color: rgba(255, 0, 0, 0.113);
+}
+
+.gain-money, .pay-money {
+    padding: 0.4vh 1vh;
+}
+
+.gain-money {
+    background-color: rgba(18, 145, 18, 0.763);
+    color: rgb(205, 253, 205);
+    box-shadow: 2px 2px 10px rgba(17, 70, 14, 0.5);
+    border: 2px solid green;
+}
+
+.pay-money {
+    background-color: rgba(186, 16, 16, 0.763);
+    color: rgb(253, 205, 205);
+    box-shadow: 2px 2px 10px rgba(17, 70, 14, 0.5);
+    border: 2px solid rgb(128, 0, 0);
+}
+
+.disabled {
+    color: grey;
+}
+
+.end-turn-button-div {
+    background-color: rgb(128, 2, 2);
+    color: white;
+    height: 8vh;
+    width: 10vw;
+    border: 2px dashed black;
+    transition: 0.3s linear all;
+    justify-content: center;
+    display: flex;
+    
+}
+
+.end-turn-button-div:hover {
+    background-color: rgb(205, 205, 205);
+    color: rgb(205, 1, 1);
+    border: 2px dashed grey;
+    cursor: pointer;
+}
+
+  
+  .card-text-div {
+    align-self: flex-start; /* Aligns the header to the left */
+  }
