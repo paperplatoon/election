@@ -17,6 +17,13 @@
     possibleCardPool: [], // Will be populated later
   };
 
+  exampleStateObject = {
+    totalTurns: 8,
+    supportThreshold: 16,
+    businessThreshold: 8,
+    
+  }
+
   function shuffleDiscardIntoDeck(stateObj) {
     stateObj = immer.produce(stateObj, (newState) => {
       newState.encounterDraw = [...newState.encounterDiscard];
@@ -179,9 +186,78 @@ function gainVolunteer(stateObj, amount) {
     avatarDiv.append(avatarImg)
 
     return avatarDiv
-    
-    
   }
+
+  function createSupportBar(state) {
+    const containerDiv = document.createElement("div");
+    containerDiv.classList.add("support-bar");
+
+    const thresholdDiv = document.createElement("div");
+    thresholdDiv.classList.add("threshold");
+    thresholdDiv.textContent = "Support Threshold";
+
+    const barDiv = document.createElement("div");
+    barDiv.classList.add("bar");
+
+    const playerDot = document.createElement("div");
+    playerDot.classList.add("player-dot");
+    playerDot.id = "player-support-dot";
+
+    const enemyDot = document.createElement("div");
+    enemyDot.classList.add("enemy-dot");
+    enemyDot.id = "enemy-support-dot";
+
+    barDiv.appendChild(playerDot);
+    barDiv.appendChild(enemyDot);
+
+    containerDiv.appendChild(thresholdDiv);
+    containerDiv.appendChild(barDiv);
+
+    const playerSupportPercentage = (state.playerSupport / state.currentStateBattleground.supportThreshold) * 100;
+    const enemySupportPercentage = (state.enemySupport / state.currentStateBattleground.supportThreshold) * 100;
+
+    playerDot.style.left = `${playerSupportPercentage}%`;
+    enemyDot.style.left = `${enemySupportPercentage}%`;
+
+    return containerDiv;
+}
+
+function createBusinessBar(state) {
+    const containerDiv = document.createElement("div");
+    containerDiv.classList.add("business-bar");
+
+    const thresholdDiv = document.createElement("div");
+    thresholdDiv.classList.add("threshold");
+    thresholdDiv.textContent = "Business Threshold";
+
+    const barDiv = document.createElement("div");
+    barDiv.classList.add("bar");
+
+    const playerDot = document.createElement("div");
+    playerDot.classList.add("player-dot");
+    playerDot.id = "player-business-dot";
+
+    const enemyDot = document.createElement("div");
+    enemyDot.classList.add("enemy-dot");
+    enemyDot.id = "enemy-business-dot";
+
+    barDiv.appendChild(playerDot);
+    barDiv.appendChild(enemyDot);
+
+    containerDiv.appendChild(thresholdDiv);
+    containerDiv.appendChild(barDiv);
+
+    const playerBusinessPercentage = (state.playerBusiness / state.currentStateBattleground.businessThreshold) * 100;
+    const enemyBusinessPercentage = (state.enemyBusiness / state.currentStateBattleground.businessThreshold) * 100;
+
+    playerDot.style.left = `${playerBusinessPercentage}%`;
+    enemyDot.style.left = `${enemyBusinessPercentage}%`;
+
+    return containerDiv;
+}
+
+
+
 
   function renderCardDisplay(cardObj, canPlay=true) {
     const cardDiv = document.createElement("div");
@@ -191,15 +267,13 @@ function gainVolunteer(stateObj, amount) {
     const cardHeader = createGenericText(cardObj.name, "card-name-text")
     if (canPlay) {
         cardHeader.classList.add(cardObj.cardType)
+        cardDiv.classList.add("card-clickable")
     } else {
         console.log('card cannot be played')
         cardHeader.classList.add("disabled")
     }
     cardHeaderDiv.append(cardHeader)
-
     avatarDiv = createAvatarDiv(cardObj)
-
-
     const cardTextDiv = createGenericDiv(['card-text-div'])
     const cardText = createGenericText(cardObj.text, "card-text")
     cardTextDiv.append(cardText)
@@ -207,6 +281,15 @@ function gainVolunteer(stateObj, amount) {
     cardDiv.append(cardHeaderDiv, avatarDiv, cardTextDiv)
 
     return cardDiv
+  }
+
+  function renderCardPile(cardArrayObj, divStringName) {
+    document.getElementById(divStringName).innerHTML = "";
+    if (cardArrayObj.length > 0) {
+      cardArrayObj.forEach(function (cardObj, index) {
+        document.getElementById(divStringName).append(renderCardDisplay(cardObj, false))
+      });
+    }
   }
   
   function renderHandCard(stateObj, cardObj, index) {
@@ -245,10 +328,181 @@ function gainVolunteer(stateObj, amount) {
     let handDiv = createHandDiv(stateObj);
     appDiv.append(handDiv);
 
-    let buttonDiv = createEndTurnButton();
-    appDiv.append(buttonDiv);
 
+    let controlsDiv = createGenericDiv(["controls-container"]);
+    let buttonDiv = createEndTurnButton();
+    controlsDiv.appendChild(buttonDiv);
+
+    let drawDiv = createDrawDiv(stateObj);
+    controlsDiv.appendChild(drawDiv);
+
+    let discardDiv = createDiscardDiv(stateObj)
+    controlsDiv.append(discardDiv)
+
+    appDiv.append(controlsDiv);
+
+    // Create and add the support bar and business bar to the page
+    const supportBar = createSupportBar(stateObj);
+    const businessBar = createBusinessBar(stateObj);
+
+    appDiv.append(supportBar, businessBar);
   }
+
+  function showDrawOverlay(stateObj) {
+    // Create the overlay div
+    const overlayDiv = document.createElement("div");
+    overlayDiv.id = "drawOverlay";
+    overlayDiv.classList.add("overlay");
+  
+    // Event listener to hide overlay when mouse leaves
+    overlayDiv.addEventListener("mouseout", (e) => {
+      // Ensure the mouse has left the overlay, not just a child element
+      if (!overlayDiv.contains(e.relatedTarget)) {
+        hideDrawOverlay();
+      }
+    });
+  
+    // Randomize the order of encounterDraw cards
+    const randomCards = fisherYatesShuffle([...stateObj.encounterDraw]);
+  
+    // Create a container for the cards
+    const cardsContainer = createGenericDiv(["overlay-cards-container"]);
+  
+    randomCards.forEach((cardObj) => {
+      const cardDiv = renderCardDisplay(cardObj, false);
+      cardsContainer.appendChild(cardDiv);
+    });
+  
+    overlayDiv.appendChild(cardsContainer);
+  
+    // Append the overlay to the body
+    document.body.appendChild(overlayDiv);
+  
+    // Trigger fade-in effect
+    setTimeout(() => {
+      overlayDiv.classList.add("visible");
+    }, 10); // Slight delay to ensure the class is added after insertion
+  }
+  
+  function hideDrawOverlay() {
+    const overlayDiv = document.getElementById("drawOverlay");
+    if (overlayDiv) {
+      // Trigger fade-out effect
+      overlayDiv.classList.remove("visible");
+      // Remove the overlay after the fade-out transition
+      overlayDiv.addEventListener(
+        "transitionend",
+        () => {
+          overlayDiv.remove();
+        },
+        { once: true }
+      );
+    }
+  }
+
+  function hideDiscardOverlay() {
+    const overlayDiv = document.getElementById("discardOverlay");
+    if (overlayDiv) {
+      // Trigger fade-out effect
+      overlayDiv.classList.remove("visible");
+      // Remove the overlay after the fade-out transition
+      overlayDiv.addEventListener(
+        "transitionend",
+        () => {
+          overlayDiv.remove();
+        },
+        { once: true }
+      );
+    }
+  }
+  
+  function showDiscardOverlay(stateObj) {
+    // Create the overlay div
+    const overlayDiv = document.createElement("div");
+    overlayDiv.id = "discardOverlay";
+    overlayDiv.classList.add("overlay");
+  
+    // Event listener to hide overlay when mouse leaves
+    overlayDiv.addEventListener("mouseout", (e) => {
+      // Ensure the mouse has left the overlay, not just a child element
+      if (!overlayDiv.contains(e.relatedTarget)) {
+        hideDiscardOverlay();
+      }
+    });
+  
+    // Randomize the order of encounterDraw cards
+    const randomCards = fisherYatesShuffle([...stateObj.encounterDiscard]);
+  
+    // Create a container for the cards
+    const cardsContainer = createGenericDiv(["overlay-cards-container"]);
+  
+    randomCards.forEach((cardObj) => {
+      const cardDiv = renderCardDisplay(cardObj, false);
+      cardsContainer.appendChild(cardDiv);
+    });
+  
+    overlayDiv.appendChild(cardsContainer);
+  
+    // Append the overlay to the body
+    document.body.appendChild(overlayDiv);
+  
+    // Trigger fade-in effect
+    setTimeout(() => {
+      overlayDiv.classList.add("visible");
+    }, 10); // Slight delay to ensure the class is added after insertion
+  }
+
+  function hideDiscardOverlay() {
+    const overlayDiv = document.getElementById("discardOverlay");
+    if (overlayDiv) {
+      // Trigger fade-out effect
+      overlayDiv.classList.remove("visible");
+      // Remove the overlay after the fade-out transition
+      overlayDiv.addEventListener(
+        "transitionend",
+        () => {
+          overlayDiv.remove();
+        },
+        { once: true }
+      );
+    }
+  }
+  
+
+  function createDrawDiv(stateObj) {
+    const drawDiv = document.createElement("div");
+    drawDiv.classList.add("draw-div");
+    drawDiv.innerText = "Draw (" + stateObj.encounterDraw.length + ")";
+  
+    // Event listeners for hover
+    drawDiv.addEventListener("mouseover", () => {
+      showDrawOverlay(stateObj);
+    });
+  
+    drawDiv.addEventListener("mouseout", () => {
+      hideDrawOverlay();
+    });
+  
+    return drawDiv;
+  }
+
+  function createDiscardDiv(stateObj) {
+    const discardDiv = document.createElement("div");
+    discardDiv.classList.add("draw-div");
+    discardDiv.innerText = "Discard (" + stateObj.encounterDiscard.length + ")";
+  
+    // Event listeners for hover
+    discardDiv.addEventListener("mouseover", () => {
+      showDiscardOverlay(stateObj);
+    });
+  
+    discardDiv.addEventListener("mouseout", () => {
+      hideDiscardOverlay();
+    });
+  
+    return discardDiv;
+  }
+  
 
   function renderChooseNewCard(stateObj) {
     let appDiv = document.getElementById("app");
@@ -307,7 +561,7 @@ function gainVolunteer(stateObj, amount) {
     moneyDiv = createStatDiv("Money: " + stateObj.playerMoney, ["stats-money"]);
     supportDiv = createStatDiv("Support: " + stateObj.playerSupport, ["stats-support"]);
     businessDiv = createStatDiv("Business: " + stateObj.playerBusiness, ["stats-business"]);
-    volunteerDiv = createStatDiv("Support: " + stateObj.playerVolunteers, ["stats-volunteer"]);
+    volunteerDiv = createStatDiv("Volunteers: " + stateObj.playerVolunteers, ["stats-volunteer"]);
 
     statsDiv = createGenericDiv(["stats-holder-div"])
     statsDiv.append(moneyDiv, supportDiv, businessDiv, volunteerDiv)
@@ -377,22 +631,28 @@ function gainVolunteer(stateObj, amount) {
       newState.playerSupport = 0;
       newState.playerBusiness = 0;
       newState.encounterDraw = fisherYatesShuffle(tempDeck);
+      newState.currentStateBattleground = exampleStateObject
+      console.log('new state is ', newState.currentStateBattleground)
     });
 
-  for (let i = 0; i < 5; i++) {
-    stateObj = await drawACard(stateObj);
-  }
+    for (let i = 0; i < 5; i++) {
+        stateObj = await drawACard(stateObj);
+    }
 
-  updateState(stateObj)
-  renderScreen(stateObj)
+    updateState(stateObj)
+    renderScreen(stateObj)
+    
 
-  return stateObj;
+    return stateObj;
 }
 
 async function updateState(stateObj) {
     state = {...stateObj}
     renderScreen(stateObj)
+    renderScreen(stateObj)
 }
+
+
 
 
   //---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -484,12 +744,12 @@ basicMoneyFour = {
 
 buySupportCard = {
     name: "Hold Rally",
-    text: "Pay $1000. Gain 5 support",
+    text: "Pay $1000. Gain 3 support",
     cardType: "pay-money",
     imagePath: "img/email.png",
     pickAttack: true,
     moneyCost: 1000,
-    supportAmount: 5,
+    supportAmount: 3,
     canPlay: (stateObj, cardObj) => stateObj.playerMoney >= cardObj.moneyCost,
     action: async (stateObj, cardObj) => {
         stateObj = await payMoney(stateObj, cardObj.moneyCost)
@@ -502,11 +762,11 @@ buySupportCard = {
 
 const buyBusinessCard = {
     name: "Backroom Deal",
-    text: "Pay $1000. Gain 5 Business.",
+    text: "Pay $1000. Gain 3 Business.",
     cardType: "pay-money",
     imagePath: "img/email.png",
     moneyCost: 1000,
-    businessAmount: 5,
+    businessAmount: 3,
     canPlay: (stateObj, cardObj) => stateObj.playerMoney >= cardObj.moneyCost,
     action: async (stateObj, cardObj) => {
       stateObj = payMoney(stateObj, cardObj.moneyCost);
@@ -544,8 +804,6 @@ const buyBusinessCard = {
   state.fullDeck = [
     basicMoneyOne,
     basicMoneyTwo,
-    basicMoneyTwo,
-    basicMoneyThree,
     basicMoneyThree,
     basicMoneyFour,
     buySupportCard,
@@ -565,3 +823,5 @@ const buyBusinessCard = {
   ];
 
   state = setupEncounter(state);
+
+  
